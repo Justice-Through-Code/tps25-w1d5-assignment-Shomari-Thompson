@@ -1,37 +1,3 @@
-"""
-Assignment Overview:
-
-You are building a Dog Image Browser using the Dog CEO REST API.
-
-The app should allow users to:
-- View a list of all available dog breeds
-- Get a random image of a breed
-- Get a random image of a sub-breed
-
-You will be using the Dog CEO API: https://dog.ceo/dog-api/
-
-Your app should display a main menu with the following options:
-1. Show all breeds
-2. Get a random image from a breed
-3. Get a random image from a sub-breed
-4. Exit
-
-The system should handle the following errors:
-- Handling errors when a user enters an invalid menu option
-- Handling errors when a user enters a breed that does not exist
-- Handling errors when a user enters a sub-breed that does not exist
-- Handling connection errors when calling the API
-
-If there is an error you should print your own custom error message to the user and allow them to try again.
-- Hint: you can use a while loop + try / except blocks to handle this
-
-You should use try / except blocks to handle these errors.
-
-You can either use the should use the requests library or the http.client library to make your requests
-
-"""
-
-
 import requests
 
 def get_all_breeds():
@@ -47,20 +13,31 @@ def get_all_breeds():
 
 def get_random_image(breed):
     """GET request to fetch a random image from a breed."""
-    # TODO: Make a request to https://dog.ceo/api/breed/{breed}/images/random
-    # TODO: Return the image URL or handle errors
-    pass
+    try:
+        response = requests.get(f"https://dog.ceo/api/breed/{breed}/images/random")
+        response.raise_for_status()
+        data = response.json()
+        return data["message"]
+    except requests.exceptions.RequestException:
+        print(f"Error: Could not fetch image for breed '{breed}'.")
+        return None
 
 def get_random_sub_breed_image(breed, sub_breed):
     """GET request to fetch a random image from a sub-breed."""
-    # TODO: Make a request to https://dog.ceo/api/breed/{breed}/{sub_breed}/images/random
-    # TODO: Return the image URL or handle errors
-    pass
+    try:
+        response = requests.get(f"https://dog.ceo/api/breed/{breed}/{sub_breed}/images/random")
+        response.raise_for_status()
+        data = response.json()
+        return data["message"]
+    except requests.exceptions.RequestException:
+        print(f"Error: Could not fetch image for sub-breed '{sub_breed}' of breed '{breed}'.")
+        return None
 
 def show_breeds(breeds_dict):
     """Prints all available breeds 5 per line."""
-    # TODO: Print all breeds (sorted), 5 per line
-    pass
+    breed_names = sorted(breeds_dict.keys())
+    for i in range(0, len(breed_names), 5):
+        print(", ".join(breed_names[i:i+5]))
 
 def main():
     while True:
@@ -79,15 +56,29 @@ def main():
         elif choice == "2":
             breeds = get_all_breeds()
             breed = input("Enter breed name: ").strip().lower()
-            # TODO: Check if breed exists and fetch image
-            # TODO: Print image URL or error message
+            if breed in breeds:
+                image_url = get_random_image(breed)
+                if image_url:
+                    print(f"Here's your image: {image_url}")
+            else:
+                print(f"Error: '{breed}' is not a valid breed.")
 
         elif choice == "3":
             breeds = get_all_breeds()
             breed = input("Enter breed name: ").strip().lower()
-            # TODO: Check if breed has sub-breeds
-            # TODO: Ask for sub-breed, check if valid, then fetch image
-            # TODO: Print image URL or error message
+            if breed in breeds and breeds[breed]:
+                print("Available sub-breeds:", ", ".join(breeds[breed]))
+                sub_breed = input("Enter sub-breed name: ").strip().lower()
+                if sub_breed in breeds[breed]:
+                    image_url = get_random_sub_breed_image(breed, sub_breed)
+                    if image_url:
+                        print(f"Here's your image: {image_url}")
+                else:
+                    print(f"Error: '{sub_breed}' is not a valid sub-breed of '{breed}'.")
+            elif breed in breeds:
+                print(f"Error: '{breed}' has no sub-breeds.")
+            else:
+                print(f"Error: '{breed}' is not a valid breed.")
 
         elif choice == "4":
             print("Goodbye!")
